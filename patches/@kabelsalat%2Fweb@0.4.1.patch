@@ -1,0 +1,17 @@
+diff --git a/package.json b/package.json
+index 00b02260e0f0872e346a74e6a69b411e928b94d2..2186545d75164c4f690963802ab2eeb4df736a67 100644
+--- a/package.json
++++ b/package.json
+@@ -4,6 +4,12 @@
+   "type": "module",
+   "module": "dist/index.mjs",
+   "main": "dist/index.js",
++  "exports": {
++    ".": {
++      "import": "./dist/index.mjs",
++      "require": "./dist/index.js"
++    }
++  },
+   "author": "Felix Roos <flix91@gmail.com>",
+   "license": "AGPL-3.0-or-later",
+   "dependencies": {

@@ -1,0 +1,18 @@
+{
+  "name": "caiman",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "check": "bun scripts/check.mjs",
+    "watch": "bun scripts/watch.mjs",
+    "gen-types": "bun scripts/gen-types.mjs"
+  },
+  "dependencies": {
+    "@strudel/core": "1.2.6",
+    "@strudel/mini": "1.2.6"
+  },
+  "patchedDependencies": {
+    "@kabelsalat/web@0.4.1": "patches/@kabelsalat%2Fweb@0.4.1.patch"
+  }
+}
