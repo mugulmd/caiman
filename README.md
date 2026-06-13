@@ -20,46 +20,47 @@ location. One-shot check: `bun run check [file.mjs]`.
 
 ## How to write patterns
 
-Plain explicit JavaScript — import what you use from the local prelude
-`./strudel.js`, and evaluate your pattern at the top level (so the checker
-sees it):
+Just write Strudel — no imports. Every function (`note`, `s`, `n`, `stack`, …)
+is a global, exactly like the Strudel REPL. The last expression is your pattern:
 
 ```js
-import { stack, note, s } from './strudel.js';
-
-export default stack(
+stack(
   note('c3 [eb3 g3]*2 <bb3 a3>'),
   s('bd hh sd hh'),
-);
+)
 ```
 
-Single-quoted strings inside controls (`note`, `s`, `n`, …) are parsed as
-mini-notation. We use plain JS (`stack(...)`, explicit calls) rather than the
-REPL's `"..."`-as-pattern magic and `$:` track syntax, because that keeps the
-file valid JavaScript — which is what makes standard editor tooling (and AI
+Strings inside controls (`note`, `s`, `n`, …) are parsed as mini-notation. This
+is plain JavaScript (explicit `stack(...)` calls, no REPL `"..."`-as-pattern
+magic or `$:` track syntax), which is what lets standard editor tooling (and AI
 edits) work without a transpiler.
 
 ## How it works
 
 Three pieces, each deliberately simple:
 
-- **`strudel.js`** — a prelude that re-exports `@strudel/core` and, crucially,
-  installs the mini-notation parser (`setStringParser(mini)`). Import from here,
-  not the packages directly, so string patterns actually parse.
+- **`strudel.js`** — a prelude that re-exports `@strudel/core` and installs the
+  mini-notation parser (`setStringParser(mini)`). You never import it; the
+  checker loads it and copies its exports onto `globalThis` so your patterns can
+  call them without imports.
 
-- **`strudel.d.ts`** — generated, permissive type stubs that power autocomplete
-  and hover. Names come from runtime introspection of Strudel's registry;
-  hover docs are parsed from the JSDoc in the packages' shipped source. Every
-  function is typed `(...args: any[]) => Pattern` so chains complete — the types
-  are **not** meant to be accurate. Regenerate after upgrading Strudel:
-  `bun run gen-types`. The editor associates it with `strudel.js` automatically
-  (same basename), so no extra config is needed.
+- **`strudel.globals.d.ts`** — generated, permissive **ambient global** type
+  stubs that power autocomplete and hover with no import. Names come from runtime
+  introspection of Strudel's registry; hover docs are parsed from the JSDoc in
+  the packages' shipped source. Every function is typed `(...args: any[]) =>
+  Pattern` so chains complete — the types are **not** meant to be accurate.
+  Regenerate after upgrading Strudel: `bun run gen-types`.
 
-- **`scripts/check.mjs` + `scripts/watch.mjs`** — the correctness check. It just
-  imports your file in Node/bun. Because Strudel parses mini-notation eagerly,
-  loading the module surfaces **both** JS errors and mini-notation errors — with
-  no browser, audio, or transpiler. The watcher runs each check in a fresh
-  subprocess (~40ms) because a long-lived process caches module source by path.
+- **`scripts/check.mjs` + `scripts/watch.mjs`** — the correctness check. It
+  injects the Strudel globals, then imports your file. Because Strudel parses
+  mini-notation eagerly, loading the file surfaces **both** JS errors and
+  mini-notation errors — with no browser, audio, or transpiler. The watcher runs
+  each check in a fresh subprocess (~40ms) because a long-lived process caches
+  module source by path.
+
+- **`.zed/settings.json`** — disables TS auto-import completions, so each Strudel
+  name shows up once (the documented global) instead of also offering an
+  undocumented "import from @strudel/core" variant.
 
 ## Notes
 

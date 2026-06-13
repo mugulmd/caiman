@@ -1,11 +1,14 @@
 {
   // Settings for the editor's JS/TS language service (Zed, VS Code, etc).
-  // strudel.d.ts is auto-associated with strudel.js by basename, so importing
-  // from './strudel.js' gives autocomplete + hover with no extra config here.
+  // strudel.globals.d.ts declares every Strudel function as an ambient global,
+  // so pattern files need no imports and autocomplete/hover work everywhere.
+  // `lib` is pinned to esnext (no DOM) so the globals don't collide with DOM
+  // names like `frames`.
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
     "target": "esnext",
+    "lib": ["esnext"],
     "checkJs": false,
     "allowJs": true,
     "noEmit": true

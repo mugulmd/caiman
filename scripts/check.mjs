@@ -22,14 +22,23 @@ const GREEN = '\x1b[32m';
 const DIM = '\x1b[2m';
 const RESET = '\x1b[0m';
 
-// Load the prelude once, silencing the library's load-time chatter.
+// Load the prelude (silencing the library's load-time chatter) and expose every
+// Strudel export as a global, so pattern files can call note(), stack(), ... with
+// no import — mirroring how Strudel works in the browser.
 async function ensurePrelude() {
   const log = console.log;
   const warn = console.warn;
   const error = console.error;
   console.log = console.warn = console.error = () => {};
   try {
-    await import(pathToFileURL(join(root, 'strudel.js')).href);
+    const strudel = await import(pathToFileURL(join(root, 'strudel.js')).href);
+    for (const [key, value] of Object.entries(strudel)) {
+      try {
+        globalThis[key] = value;
+      } catch {
+        // Skip names that collide with read-only globals.
+      }
+    }
   } finally {
     console.log = log;
     console.warn = warn;

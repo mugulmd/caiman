@@ -1,0 +1,13 @@
+{
+  // Show only the documented Strudel globals in completions. Auto-imports are
+  // disabled so the same name from "@strudel/core" / "@strudel/mini" doesn't
+  // appear as a second, undocumented suggestion.
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "javascript": { "suggest": { "autoImports": false } },
+        "typescript": { "suggest": { "autoImports": false } }
+      }
+    }
+  }
+}

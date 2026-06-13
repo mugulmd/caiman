@@ -1,17 +1,14 @@
 // Caiman prelude.
 //
-// Import everything you need for a pattern from here:
+// You don't import this directly — the checker loads it and copies every export
+// onto globalThis, so pattern files can call note(), stack(), ... with no import
+// (just like the Strudel REPL). It's also where the runtime API surface comes
+// from for `bun run gen-types`.
 //
-//     import { note, s, stack } from './strudel.js';
-//
-// This module does one essential thing the bare packages don't do on their
-// own: it installs the mini-notation parser into the core controls, so that
-// note('c [e g]*2') actually parses the string as mini-notation (and throws
-// on malformed notation) instead of treating it as one opaque value.
-//
-// Types for everything re-exported here live in the generated `strudel.d.ts`
-// sibling file (run `bun run gen-types` to regenerate). That's what powers
-// autocomplete and docs-on-hover in your editor.
+// It does one essential thing the bare packages don't do on their own: it
+// installs the mini-notation parser into the core controls, so that
+// note('c [e g]*2') actually parses the string as mini-notation (and throws on
+// malformed notation) instead of treating it as one opaque value.
 
 import { setStringParser } from '@strudel/core';
 import { mini } from '@strudel/mini';

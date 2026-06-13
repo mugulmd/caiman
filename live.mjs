@@ -1,12 +1,10 @@
-// Your live pattern. Edit freely, then save — the watcher checks it.
+// Your live pattern — just write Strudel, no imports needed.
 //
 //   bun run watch        # in a terminal: re-checks this file on every save
 //   bun run check        # one-shot check
 //
-// Plain explicit JS dialect: import what you use, single-quoted strings are
-// parsed as mini-notation by the controls (note, s, n, ...), and you stack
-// patterns with stack(...) rather than the REPL's `$:` shorthand.
+// All Strudel functions (note, s, n, stack, ...) are available as globals, the
+// same way they are in the Strudel REPL. Strings inside controls are parsed as
+// mini-notation. The last expression is your pattern.
 
-import { stack, note, s, sequence } from "./strudel.js";
-
-export default stack(note("c3 [eb3 g3]*2 <bb3 a3>"), s("bd hh sd hh"));
+stack(note("c3 [eb3 g3]*2 <bb3 a3>"), s("bd hh sd hh"));
