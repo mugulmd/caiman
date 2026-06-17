@@ -10,7 +10,7 @@
 import { createServer as createViteServer } from 'vite';
 import { Server as SocketServer } from 'socket.io';
 import chokidar from 'chokidar';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validate, validateSetup } from './validate.js';
@@ -26,7 +26,15 @@ const C = {
 };
 
 if (!existsSync(livePath)) {
-  console.error(`${C.red}no session: sessions/${name}${C.reset} — create one with: bun run new ${name}`);
+  console.error(`${C.red}no session: sessions/${name}${C.reset}`);
+  const sessionsDir = join(repoRoot, 'sessions');
+  const existing = existsSync(sessionsDir)
+    ? readdirSync(sessionsDir, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && !e.name.startsWith('_'))
+        .map((e) => e.name)
+    : [];
+  if (existing.length) console.error(`  sessions: ${existing.join(', ')}`);
+  console.error(`  create one with: bun run new ${name}`);
   process.exit(2);
 }
 
@@ -66,6 +74,7 @@ async function onLiveChange() {
     const loc = result.error.loc ? ` ${C.dim}(${result.error.loc})${C.reset}` : '';
     console.log(`${C.red}✗${C.reset} ${C.dim}${stamp()}${C.reset} live.js${loc} ${result.error.message}`);
     console.log(`  ${C.dim}not pushed — last good pattern keeps playing${C.reset}`);
+    io.emit('validation-error', { phase: 'check', message: result.error.message, loc: result.error.loc });
   }
 }
 
@@ -78,6 +87,7 @@ function onSetupChange() {
     console.log(`${C.green}✓${C.reset} ${C.dim}${stamp()}${C.reset} setup.js → pushed`);
   } else {
     console.log(`${C.red}✗${C.reset} ${C.dim}${stamp()}${C.reset} setup.js ${result.error.message}`);
+    io.emit('validation-error', { phase: 'setup', message: result.error.message, loc: result.error.loc });
   }
 }
 

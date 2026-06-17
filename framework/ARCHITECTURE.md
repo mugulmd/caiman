@@ -134,8 +134,15 @@ exist in Node).
   so they autocomplete in `setup.js`. The `demo` session shows a custom synth
   (`s("mysaw")`). Verified headlessly: types resolve under `lib esnext`, demo
   live/setup validate, and the server transmits setup+code in the snapshot.
-- **P5 — polish**: error round-trip, reconnect snapshot, start-audio overlay,
-  session switching.
+- **P5 — polish** *(built; awaiting visual confirmation)*: the player now has a
+  start-audio overlay (captures the gesture browsers require), a connection dot
+  (live / offline / connecting), an error banner, and a pause/resume toggle
+  (via `repl.toggle()` + `onToggle`). The server emits `validation-error` on a
+  failed check/setup so the browser shows *why* a save didn't take effect (the
+  last-good pattern keeps playing); the banner clears on the next good push.
+  Browser runtime errors still round-trip to the terminal. `bun run session`
+  with an unknown name lists the available sessions. Verified headlessly:
+  validation-error reaches the client, good edits still push, session listing.
 
 ## Open questions / risks (verified as gates, not assumed)
 

@@ -1,9 +1,9 @@
-// caiman web player — P3.
+// caiman web player.
 //
-// A dumb player: it knows nothing about sessions. It connects to the server over
-// socket.io and plays whatever code arrives, hot-swapping on every push. The
-// same core evaluate(code, transpiler) the server validates with runs here (via
-// repl().evaluate), so check==run.
+// A dumb player: it connects to the server over socket.io and plays whatever
+// code arrives, hot-swapping on every push. It uses repl().evaluate, which runs
+// the SAME core evaluate(code, transpiler) the server validates with, so a
+// pattern that passes the server's check will run here.
 
 import { io } from 'socket.io-client';
 import { repl, evalScope } from '@strudel/core';
@@ -22,30 +22,43 @@ import {
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 
 const els = {
+  overlay: document.getElementById('overlay'),
   start: document.getElementById('start'),
-  stop: document.getElementById('stop'),
+  session: document.getElementById('session'),
+  conn: document.getElementById('conn'),
+  banner: document.getElementById('banner'),
   code: document.getElementById('code'),
+  toggle: document.getElementById('toggle'),
   status: document.getElementById('status'),
 };
-const setStatus = (msg, isError = false) => {
-  els.status.textContent = msg;
-  els.status.classList.toggle('error', isError);
+
+const setStatus = (msg) => (els.status.textContent = msg);
+const setConn = (state) => {
+  els.conn.className = state;
+  els.conn.textContent = { live: '● live', offline: '○ offline', connecting: '… connecting' }[state];
+};
+const showBanner = (phase, message, loc) => {
+  els.banner.textContent = `${phase}${loc ? ` (${loc})` : ''}: ${message}`;
+  els.banner.hidden = false;
+};
+const clearBanner = () => {
+  els.banner.hidden = true;
+  els.banner.textContent = '';
 };
 
 let strudelRepl;
 let socket;
-let started = false; // becomes true after the user clicks ▶ (unlocks audio)
+let started = false; // true after the user clicks ▶ start (unlocks audio)
+let isPlaying = false; // scheduler running? kept in sync by repl's onToggle
 const pending = { setup: null, code: null };
-// What's currently live, so we never re-evaluate identical source. This keeps
-// reconnects (e.g. server restart) from restarting playback from cycle 0.
+// What's currently live, so we never re-evaluate identical source (keeps
+// reconnects from restarting playback from cycle 0).
 const playing = { setup: null, code: null };
 
 async function boot() {
-  // Expose the whole Strudel API as globals so evaluated code (and the
-  // transpiler's m() calls) resolve.
   await evalScope(import('@strudel/core'), import('@strudel/mini'), import('@strudel/webaudio'));
   await registerSynthSounds();
-  setStatus('loading default samples (bd, sd, hh, …)…');
+  els.start.textContent = 'loading samples…';
   await samples('github:tidalcycles/dirt-samples');
 
   strudelRepl = repl({
@@ -53,21 +66,28 @@ async function boot() {
     getTime: () => getAudioContextCurrentTime(),
     transpiler,
     onEvalError: (err) => reportRuntime('eval', err),
+    onToggle: (isOn) => {
+      isPlaying = isOn;
+      els.toggle.textContent = isOn ? '⏸ pause' : '▶ resume';
+      setStatus(isOn ? 'playing' : 'paused');
+    },
   });
   initAudioOnFirstClick();
 
   connect();
   els.start.disabled = false;
-  els.stop.disabled = false;
+  els.start.textContent = '▶ start';
 }
 
 function connect() {
   socket = io({ path: '/caiman.io', transports: ['websocket'] });
-  socket.on('connect', () => setStatus(started ? 'playing' : 'connected — click ▶ start'));
-  socket.on('disconnect', () => setStatus('server offline — will reconnect…', true));
+  setConn('connecting');
+  socket.on('connect', () => setConn('live'));
+  socket.on('disconnect', () => setConn('offline'));
 
   // Full snapshot on (re)connect.
   socket.on('session', ({ name, setup, code }) => {
+    els.session.textContent = `caiman · ${name}`;
     document.title = `caiman — ${name}`;
     pending.setup = setup;
     pending.code = code;
@@ -78,13 +98,17 @@ function connect() {
   socket.on('code', ({ source }) => {
     pending.code = source;
     els.code.textContent = source;
+    clearBanner();
     if (started) play(source);
   });
   // setup.js changed → re-run registration.
   socket.on('setup', ({ source }) => {
     pending.setup = source;
+    clearBanner();
     if (started) runSetup(source);
   });
+  // Server-side validation failed → show why; the last-good pattern keeps playing.
+  socket.on('validation-error', ({ phase, message, loc }) => showBanner(phase, message, loc));
 }
 
 async function runSetup(source) {
@@ -102,7 +126,7 @@ async function play(code) {
   try {
     await strudelRepl.evaluate(code); // transpile → evaluate → setPattern → start
     playing.code = code;
-    setStatus('playing');
+    clearBanner();
   } catch (err) {
     reportRuntime('eval', err);
   }
@@ -114,19 +138,24 @@ async function applyAll() {
 }
 
 function reportRuntime(phase, err) {
-  setStatus(`${phase} error: ${err.message}`, true);
+  showBanner(phase, err.message);
   socket?.emit('runtime-error', { phase, message: err.message });
 }
 
 els.start.addEventListener('click', async () => {
   await initAudio(); // unlock/resume the AudioContext (needs this user gesture)
   started = true;
-  els.start.textContent = '▶ live';
+  els.overlay.hidden = true;
+  els.toggle.disabled = false;
   await applyAll();
 });
-els.stop.addEventListener('click', () => {
-  strudelRepl?.stop();
-  setStatus('stopped — ▶ to resume');
+// The scheduler has no toggle(); drive it with explicit stop()/start().
+els.toggle.addEventListener('click', () => {
+  if (!strudelRepl) return;
+  if (isPlaying) strudelRepl.stop();
+  else strudelRepl.start();
 });
 
-boot().catch((err) => setStatus(`boot failed: ${err.message}`, true));
+boot().catch((err) => {
+  els.start.textContent = `boot failed: ${err.message}`;
+});

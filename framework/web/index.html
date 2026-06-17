@@ -6,38 +6,66 @@
     <title>caiman player</title>
     <style>
       :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
       body {
         font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
-        background: #14161a; color: #e6e6e6; margin: 0;
-        display: grid; place-items: center; min-height: 100vh;
+        background: #14161a; color: #e6e6e6; margin: 0; min-height: 100vh;
+        display: flex; flex-direction: column;
       }
-      main { width: min(680px, 92vw); }
-      h1 { font-size: 15px; font-weight: 600; color: #8ab4f8; margin: 0 0 1rem; }
-      .controls { display: flex; gap: .5rem; margin-bottom: 1rem; }
+      header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: .75rem 1rem; border-bottom: 1px solid #23262d;
+      }
+      #session { color: #8ab4f8; font-weight: 600; }
+      #conn { font-size: 12px; }
+      #conn.live { color: #81c995; }
+      #conn.offline { color: #9aa0a6; }
+      #conn.connecting { color: #fdd663; }
+      #banner {
+        background: #3a1c1c; color: #f6aa9f; border-bottom: 1px solid #5b2b2b;
+        padding: .6rem 1rem; white-space: pre-wrap; font-size: 13px;
+      }
+      main { flex: 1; padding: 1rem; }
+      pre {
+        background: #0e1013; border: 1px solid #23262d; border-radius: 8px;
+        padding: 1rem; margin: 0; overflow: auto; min-height: 4rem;
+      }
+      footer {
+        display: flex; align-items: center; gap: 1rem;
+        padding: .75rem 1rem; border-top: 1px solid #23262d;
+      }
+      #status { color: #9aa0a6; font-size: 12px; }
       button {
         font: inherit; padding: .5rem 1rem; border: 1px solid #2c2f36;
         background: #1c1f26; color: #e6e6e6; border-radius: 6px; cursor: pointer;
       }
       button:hover:not(:disabled) { background: #262a33; }
       button:disabled { opacity: .4; cursor: default; }
-      pre {
-        background: #0e1013; border: 1px solid #2c2f36; border-radius: 6px;
-        padding: 1rem; overflow: auto; margin: 0 0 1rem;
+      #overlay {
+        position: fixed; inset: 0; background: #14161a;
+        display: grid; place-items: center; z-index: 10;
       }
-      #status { color: #9aa0a6; }
-      #status.error { color: #f28b82; }
+      #overlay[hidden] { display: none; }
+      #start { font-size: 18px; padding: 1rem 2.5rem; border-radius: 10px; }
     </style>
   </head>
   <body>
-    <main>
-      <h1>caiman player</h1>
-      <div class="controls">
-        <button id="start" disabled>▶ start</button>
-        <button id="stop" disabled>■ stop</button>
-      </div>
-      <pre id="code">connecting…</pre>
-      <div id="status">booting…</div>
-    </main>
+    <div id="overlay"><button id="start" disabled>booting…</button></div>
+
+    <header>
+      <span id="session">caiman</span>
+      <span id="conn" class="connecting">… connecting</span>
+    </header>
+
+    <div id="banner" hidden></div>
+
+    <main><pre id="code">connecting…</pre></main>
+
+    <footer>
+      <button id="toggle" disabled>⏸ pause</button>
+      <span id="status"></span>
+    </footer>
+
     <script type="module" src="./main.js"></script>
   </body>
 </html>
