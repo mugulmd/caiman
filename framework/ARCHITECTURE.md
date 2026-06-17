@@ -103,7 +103,29 @@ exist in Node).
   `samples('github:tidalcycles/dirt-samples')`; default synths from
   `registerSynthSounds()`. A bun `overrides` pins `@strudel/core` to one version
   so the browser bundle has a single `Pattern`/registry. `bun run web`.
-- **P3 — socket wire**: edit `live.js` → validate → push → hear it.
+- **P3 — socket wire** *(built; headless-verified, awaiting live audio
+  confirmation)*: `framework/server/index.js` (`bun run session <name>`) runs Vite
+  + socket.io on one port, watches the session (chokidar), validates on change,
+  and pushes valid `code` (rejects invalid, logging it — last good keeps
+  playing). The player (`main.js`) is now socket-driven: snapshot on connect,
+  hot-swap on `code`, run `setup` on `setup`, and reports browser runtime errors
+  back to the terminal.
+
+  Two websocket gotchas, both fixed:
+  - **socket.io is websocket-only** (`transports: ['websocket']`). HTTP
+    long-polling doesn't survive sharing the port with Vite — the client never
+    stayed connected.
+  - **Vite HMR runs on its own port** (`hmr: { port: 24679 }`), not disabled.
+    `hmr: false` still injects `@vite/client`, which opens an HMR websocket to
+    :4321; with no server there it logs "connection lost", pings, and calls
+    `location.reload()` — a full-page reload loop ~1×/s. A real HMR server on a
+    separate port stops that and keeps socket.io alone on 4321 (no shared
+    upgrade-handler fight). Only 4321 is user-facing.
+
+  The player also skips re-evaluating identical source, so a legitimate
+  reconnect resumes without restarting from cycle 0. Verified headlessly: HMR ws
+  accepts connections on 24679; socket.io snapshot/valid-push/invalid-reject/
+  restore all pass on 4321.
 - **P4 — setup.js**: push/run samples + synths on connect; extend `gen-types`
   to include `@strudel/webaudio`.
 - **P5 — polish**: error round-trip, reconnect snapshot, start-audio overlay,
@@ -123,4 +145,6 @@ exist in Node).
 - ~~Multiple core copies in the browser bundle?~~ *(P2 — webaudio pins
   core@1.2.5 while we use 1.2.6; a bun `overrides` forces one version. Vite
   `resolve.dedupe` is a second guard.)*
-- Vite middleware-mode + socket.io on one HTTP server / port. *(P3)*
+- ~~Vite + socket.io on one port?~~ *(P3 — yes: socket.io attaches to Vite's
+  own `httpServer` on path `/caiman.io`; Vite HMR is disabled so there's no
+  websocket-upgrade conflict.)*

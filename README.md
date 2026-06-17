@@ -5,21 +5,28 @@ with autocomplete, docs-on-hover, and an evaluate-on-save correctness check —
 no in-browser editor required.
 
 caiman is a **framework + sessions**: the engine in `framework/` is written
-once; each music project is a thin folder under `sessions/`. The browser-audio
-layer (a server that pushes code to a `@strudel/web` page) is being built in
-phases — see [`framework/ARCHITECTURE.md`](framework/ARCHITECTURE.md).
+once; each music project is a thin folder under `sessions/`. A Node server
+watches your file, validates each save, and pushes valid code to a browser tab
+that plays it — hot-swapping the pattern live. See
+[`framework/ARCHITECTURE.md`](framework/ARCHITECTURE.md) for the design and the
+build phases (samples/synths and polish are still in progress).
 
 ## Quick start
 
 ```bash
 bun install
 bun run new my-track          # scaffold sessions/my-track/ from the template
-bun run watch sessions/my-track/live.js   # re-check on every save (pane)
+bun run session my-track      # serve the player + watch/validate/push on save
 ```
 
-Edit `sessions/<name>/live.js`. On save you get a green ✓ or a red ✗ with the
-error and location. One-shot: `bun run check sessions/<name>/live.js`
-(defaults to `sessions/sandbox/live.js`).
+Open the printed URL (http://localhost:4321), click **▶ start** to enable audio,
+then edit `sessions/my-track/live.js` in your editor. Every save is validated and
+hot-swapped into the running audio; an invalid edit is logged in the terminal and
+**not** pushed, so the last good pattern keeps playing.
+
+Validation-only, no audio: `bun run check sessions/<name>/live.js` (one-shot) or
+`bun run watch sessions/<name>/live.js` (re-check on save). Both default to
+`sessions/sandbox/live.js`.
 
 ## How to write patterns
 

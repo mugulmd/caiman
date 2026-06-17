@@ -46,6 +46,28 @@ function locate(err) {
   return m ? `${m[1]}:${m[2]}` : null;
 }
 
+function asError(err) {
+  return {
+    message: (err?.message ?? String(err)).split('\n')[0],
+    loc: locate(err),
+  };
+}
+
+const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+
+// Syntax-only check for setup.js. Unlike live.js it is NOT a pattern and is NOT
+// transpiled (its strings are URLs / sample names, not mini-notation), and it
+// can't be executed here (it touches the Web Audio context). Constructing an
+// AsyncFunction parses the body — throwing on syntax errors — without running it.
+export function validateSetup(source) {
+  try {
+    new AsyncFunction(source);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: asError(err) };
+  }
+}
+
 // Validate a source string. Returns { ok: true } or { ok: false, error }.
 export async function validate(source) {
   try {
@@ -56,12 +78,6 @@ export async function validate(source) {
     }
     return { ok: true };
   } catch (err) {
-    return {
-      ok: false,
-      error: {
-        message: (err?.message ?? String(err)).split('\n')[0],
-        loc: locate(err),
-      },
-    };
+    return { ok: false, error: asError(err) };
   }
 }

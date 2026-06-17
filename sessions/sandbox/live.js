@@ -7,4 +7,4 @@
 // same way they are in the Strudel REPL. Strings inside controls are parsed as
 // mini-notation. The last expression is your pattern.
 
-stack(note("c3 [eb3 g3]*2 <bb3 a3>"), s("bd hh sd hh"));
+stack(note("c3 [eb3 g3]*2 <bb3 a3>"), s("bd hh sd hh").fast(4).degradeBy(0.3));
