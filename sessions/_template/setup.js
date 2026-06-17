@@ -15,14 +15,15 @@
 // for you by the engine):
 //
 //   registerSound('mysaw', (time, value, onended) => {
-//     const { freq } = value;
 //     const ctx = getAudioContext();
-//     const o = new OscillatorNode(ctx, { type: 'sawtooth', frequency: Number(freq) });
-//     o.start(time);
+//     const frequency = getFrequencyFromValue(value); // Hz from note() or freq()
+//     const o = new OscillatorNode(ctx, { type: 'sawtooth', frequency });
 //     const g = new GainNode(ctx, { gain: 0.3 });
-//     const node = o.connect(g);
+//     o.connect(g);
+//     o.start(time);
+//     o.stop(time + (value.duration ?? 0.25) + 0.1); // MUST stop, or it plays forever
 //     o.addEventListener('ended', () => { o.disconnect(); g.disconnect(); onended(); });
-//     return { node, stop: (t) => o.stop(t) };
+//     return { node: g, stop: (t) => { try { o.stop(t); } catch {} } };
 //   }, { type: 'synth' });
 
 // (default samples bd/sd/hh are loaded by the framework — see ARCHITECTURE.md)

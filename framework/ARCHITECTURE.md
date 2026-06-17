@@ -126,8 +126,14 @@ exist in Node).
   reconnect resumes without restarting from cycle 0. Verified headlessly: HMR ws
   accepts connections on 24679; socket.io snapshot/valid-push/invalid-reject/
   restore all pass on 4321.
-- **P4 — setup.js**: push/run samples + synths on connect; extend `gen-types`
-  to include `@strudel/webaudio`.
+- **P4 — setup.js** *(built; awaiting audio confirmation)*: the connect snapshot
+  carries `setup`; the browser runs it once (plain JS via `AsyncFunction`, no
+  transpile — its strings are URLs/sample names) to register samples/synths,
+  then plays `code`. `gen-types` now also emits `@strudel/webaudio`'s functions
+  (`samples`, `registerSound`, `getAudioContext`, … typed `=> any`) as globals,
+  so they autocomplete in `setup.js`. The `demo` session shows a custom synth
+  (`s("mysaw")`). Verified headlessly: types resolve under `lib esnext`, demo
+  live/setup validate, and the server transmits setup+code in the snapshot.
 - **P5 — polish**: error round-trip, reconnect snapshot, start-audio overlay,
   session switching.
 
