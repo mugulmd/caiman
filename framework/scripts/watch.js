@@ -1,6 +1,6 @@
 // Re-runs the evaluate-on-save check whenever the pattern file changes.
 //
-// Usage:  bun scripts/watch.mjs [file.mjs]   (default: live.mjs)
+// Usage:  bun framework/scripts/watch.js [file]   (default: sessions/sandbox/live.js)
 //
 // Keep this running in a terminal pane while you edit. On every save you get a
 // green ✓ or a red ✗ with the error and location. This is the closest thing to
@@ -17,9 +17,9 @@ import { existsSync, watch } from 'node:fs';
 import { spawn } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const checkScript = join(__dirname, 'check.mjs');
+const checkScript = join(__dirname, 'check.js');
 
-const arg = process.argv[2] ?? 'live.mjs';
+const arg = process.argv[2] ?? 'sessions/sandbox/live.js';
 const target = resolve(process.cwd(), arg);
 
 if (!existsSync(target)) {

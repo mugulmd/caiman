@@ -5,7 +5,7 @@
 // loading the module surfaces BOTH JavaScript syntax errors AND mini-notation
 // parse errors — no audio, no browser, no transpiler needed.
 //
-// Usage:  bun scripts/check.mjs [file.mjs]   (default: live.mjs)
+// Usage:  bun framework/scripts/check.js [file]   (default: sessions/sandbox/live.js)
 //
 // For the check to see your patterns, the file must evaluate them at module
 // top level, e.g.  export default stack(note('c e g'), s('bd hh'))
@@ -86,7 +86,7 @@ function report(target, result) {
 
 // Run as a script (not when imported by watch.mjs).
 if (import.meta.main) {
-  const arg = process.argv[2] ?? 'live.mjs';
+  const arg = process.argv[2] ?? 'sessions/sandbox/live.js';
   const target = resolve(process.cwd(), arg);
   if (!existsSync(target)) {
     console.error(`${RED}✗${RESET} no such file: ${arg}`);

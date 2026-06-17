@@ -4,19 +4,22 @@ Live-code [Strudel](https://strudel.cc) from a local file in your own editor,
 with autocomplete, docs-on-hover, and an evaluate-on-save correctness check —
 no in-browser editor required.
 
-This repo is **tooling only**: writing patterns, getting editor smarts, and
-checking that they're valid. Actually producing audio (a browser page running
-`@strudel/web`) is a separate, later step.
+caiman is a **framework + sessions**: the engine in `framework/` is written
+once; each music project is a thin folder under `sessions/`. The browser-audio
+layer (a server that pushes code to a `@strudel/web` page) is being built in
+phases — see [`framework/ARCHITECTURE.md`](framework/ARCHITECTURE.md).
 
 ## Quick start
 
 ```bash
 bun install
-bun run watch      # re-checks live.mjs on every save (keep open in a pane)
+bun run new my-track          # scaffold sessions/my-track/ from the template
+bun run watch sessions/my-track/live.js   # re-check on every save (pane)
 ```
 
-Edit `live.mjs`. On save you get a green ✓ or a red ✗ with the error and
-location. One-shot check: `bun run check [file.mjs]`.
+Edit `sessions/<name>/live.js`. On save you get a green ✓ or a red ✗ with the
+error and location. One-shot: `bun run check sessions/<name>/live.js`
+(defaults to `sessions/sandbox/live.js`).
 
 ## How to write patterns
 
@@ -39,24 +42,25 @@ edits) work without a transpiler.
 
 Three pieces, each deliberately simple:
 
-- **`strudel.js`** — a prelude that re-exports `@strudel/core` and installs the
-  mini-notation parser (`setStringParser(mini)`). You never import it; the
-  checker loads it and copies its exports onto `globalThis` so your patterns can
-  call them without imports.
+- **`framework/strudel.js`** — a prelude that re-exports `@strudel/core` and
+  installs the mini-notation parser (`setStringParser(mini)`). You never import
+  it; the checker loads it and copies its exports onto `globalThis` so your
+  patterns can call them without imports.
 
-- **`strudel.globals.d.ts`** — generated, permissive **ambient global** type
-  stubs that power autocomplete and hover with no import. Names come from runtime
-  introspection of Strudel's registry; hover docs are parsed from the JSDoc in
-  the packages' shipped source. Every function is typed `(...args: any[]) =>
-  Pattern` so chains complete — the types are **not** meant to be accurate.
-  Regenerate after upgrading Strudel: `bun run gen-types`.
+- **`framework/strudel.globals.d.ts`** — generated, permissive **ambient
+  global** type stubs that power autocomplete and hover with no import. Names
+  come from runtime introspection of Strudel's registry; hover docs are parsed
+  from the JSDoc in the packages' shipped source. Every function is typed
+  `(...args: any[]) => Pattern` so chains complete — the types are **not** meant
+  to be accurate. Regenerate after upgrading Strudel: `bun run gen-types`.
 
-- **`scripts/check.mjs` + `scripts/watch.mjs`** — the correctness check. It
+- **`framework/scripts/check.js` + `watch.js`** — the correctness check. It
   injects the Strudel globals, then imports your file. Because Strudel parses
   mini-notation eagerly, loading the file surfaces **both** JS errors and
   mini-notation errors — with no browser, audio, or transpiler. The watcher runs
   each check in a fresh subprocess (~40ms) because a long-lived process caches
-  module source by path.
+  module source by path. (P1 will move this to a shared `evaluate(source)` path
+  inside the server.)
 
 - **`.zed/settings.json`** — disables TS auto-import completions, so each Strudel
   name shows up once (the documented global) instead of also offering an

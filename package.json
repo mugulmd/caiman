@@ -4,9 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "check": "bun scripts/check.mjs",
-    "watch": "bun scripts/watch.mjs",
-    "gen-types": "bun scripts/gen-types.mjs"
+    "check": "bun framework/scripts/check.js",
+    "watch": "bun framework/scripts/watch.js",
+    "gen-types": "bun framework/scripts/gen-types.js",
+    "new": "bun framework/scripts/new-session.js"
   },
   "dependencies": {
     "@strudel/core": "1.2.6",

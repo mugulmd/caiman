@@ -1,9 +1,9 @@
 {
   // Settings for the editor's JS/TS language service (Zed, VS Code, etc).
-  // strudel.globals.d.ts declares every Strudel function as an ambient global,
-  // so pattern files need no imports and autocomplete/hover work everywhere.
-  // `lib` is pinned to esnext (no DOM) so the globals don't collide with DOM
-  // names like `frames`.
+  // framework/strudel.globals.d.ts declares every Strudel function as an ambient
+  // global, so session files (sessions/<name>/*.js) need no imports and get
+  // autocomplete/hover everywhere. `lib` is pinned to esnext (no DOM) so the
+  // globals don't collide with DOM names like `frames`.
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -13,5 +13,5 @@
     "allowJs": true,
     "noEmit": true
   },
-  "include": ["*.mjs", "*.js", "*.d.ts", "scripts/**/*.mjs"]
+  "include": ["framework/**/*.js", "framework/**/*.d.ts", "sessions/**/*.js"]
 }
