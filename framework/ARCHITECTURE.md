@@ -95,8 +95,14 @@ exist in Node).
   `check.js`/`watch.js` now use it; the watcher validates **in-process** (the
   string-based path has no module cache to defeat, so the old subprocess-per-save
   is gone). Added dep: `@strudel/transpiler`.
-- **P2 — web player**: Vite + `@strudel/web`, hardcoded pattern → audio via
-  `scheduler.setPattern`, hot-swap.
+- **P2 — web player** *(built; awaiting audio confirmation)*: `framework/web/`
+  (Vite). Uses the individual packages (not the `@strudel/web` bundle) so the
+  browser shares the same core version line as the Node validator. Hot-swap =
+  `repl().evaluate(code)`, which runs the same core `evaluate(code, transpiler)`
+  then `scheduler.setPattern`. Default `bd/sd/hh` come from prebaking
+  `samples('github:tidalcycles/dirt-samples')`; default synths from
+  `registerSynthSounds()`. A bun `overrides` pins `@strudel/core` to one version
+  so the browser bundle has a single `Pattern`/registry. `bun run web`.
 - **P3 — socket wire**: edit `live.js` → validate → push → hear it.
 - **P4 — setup.js**: push/run samples + synths on connect; extend `gen-types`
   to include `@strudel/webaudio`.
@@ -108,7 +114,13 @@ exist in Node).
 - ~~Does `evaluate()` run headless in Node?~~ *(P1 — yes; `evaluate(source,
   transpiler)` builds the pattern with no audio. `m` from `@strudel/mini` must be
   a global, since the transpiler rewrites `"…"` into `m(...)`.)*
-- Exact scheduler / hot-swap API from `@strudel/web`. *(P2)*
-- Whether `initStrudel()` prebakes default `bd/sd/hh` or we ship a default
-  setup. *(P2/P4)*
+- ~~Exact scheduler / hot-swap API.~~ *(P2 — `repl({ defaultOutput, getTime,
+  transpiler })` → `repl.evaluate(code)` transpiles, evaluates, and
+  `setPattern`s in one call.)*
+- ~~Default `bd/sd/hh`?~~ *(P2 — not built in; we prebake
+  `samples('github:tidalcycles/dirt-samples')`. Per-session `setup.js` can add
+  more in P4.)*
+- ~~Multiple core copies in the browser bundle?~~ *(P2 — webaudio pins
+  core@1.2.5 while we use 1.2.6; a bun `overrides` forces one version. Vite
+  `resolve.dedupe` is a second guard.)*
 - Vite middleware-mode + socket.io on one HTTP server / port. *(P3)*

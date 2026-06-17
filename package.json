@@ -7,14 +7,22 @@
     "check": "bun framework/scripts/check.js",
     "watch": "bun framework/scripts/watch.js",
     "gen-types": "bun framework/scripts/gen-types.js",
-    "new": "bun framework/scripts/new-session.js"
+    "new": "bun framework/scripts/new-session.js",
+    "web": "vite framework/web"
   },
   "dependencies": {
     "@strudel/core": "1.2.6",
     "@strudel/mini": "1.2.6",
-    "@strudel/transpiler": "1.2.6"
+    "@strudel/transpiler": "1.2.6",
+    "@strudel/webaudio": "1.2.6"
   },
   "patchedDependencies": {
     "@kabelsalat/web@0.4.1": "patches/@kabelsalat%2Fweb@0.4.1.patch"
+  },
+  "overrides": {
+    "@strudel/core": "1.2.6"
+  },
+  "devDependencies": {
+    "vite": "^8.0.16"
   }
 }

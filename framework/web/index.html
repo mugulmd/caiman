@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>caiman player</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: #14161a; color: #e6e6e6; margin: 0;
+        display: grid; place-items: center; min-height: 100vh;
+      }
+      main { width: min(680px, 92vw); }
+      h1 { font-size: 15px; font-weight: 600; color: #8ab4f8; margin: 0 0 1rem; }
+      .controls { display: flex; gap: .5rem; margin-bottom: 1rem; }
+      button {
+        font: inherit; padding: .5rem 1rem; border: 1px solid #2c2f36;
+        background: #1c1f26; color: #e6e6e6; border-radius: 6px; cursor: pointer;
+      }
+      button:hover:not(:disabled) { background: #262a33; }
+      button:disabled { opacity: .4; cursor: default; }
+      pre {
+        background: #0e1013; border: 1px solid #2c2f36; border-radius: 6px;
+        padding: 1rem; overflow: auto; margin: 0 0 1rem;
+      }
+      #status { color: #9aa0a6; }
+      #status.error { color: #f28b82; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>caiman player — P2</h1>
+      <div class="controls">
+        <button id="play" disabled>▶ play</button>
+        <button id="swap" disabled>⇄ swap pattern</button>
+        <button id="stop" disabled>■ stop</button>
+      </div>
+      <pre id="code">loading…</pre>
+      <div id="status">booting…</div>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
