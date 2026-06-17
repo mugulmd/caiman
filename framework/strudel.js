@@ -19,4 +19,6 @@ import { mini } from '@strudel/mini';
 setStringParser(mini);
 
 export * from '@strudel/core';
-export { mini } from '@strudel/mini';
+// `m` is what the transpiler rewrites double-quoted strings into, so it must be
+// a global for evaluated/transpiled code to run. `mini` is its long name.
+export { mini, m } from '@strudel/mini';

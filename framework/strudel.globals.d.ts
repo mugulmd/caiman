@@ -6880,6 +6880,8 @@ declare function lt(...args: any[]): Pattern;
 
 declare function lte(...args: any[]): Pattern;
 
+declare function m(...args: any[]): Pattern;
+
 declare function mapArgs(...args: any[]): Pattern;
 
 declare function mask(...args: any[]): Pattern;

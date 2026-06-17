@@ -90,8 +90,11 @@ exist in Node).
 
 - **P0 — reshape** *(done)*: framework/ + sessions/ layout, `_template`,
   `new-session`. Gate: autocomplete + one-shot check still work.
-- **P1 — server evaluate()**: prove `evaluate(source)` validates headless in
-  Node; replace the import-based checker.
+- **P1 — server evaluate()** *(done)*: `framework/server/validate.js` validates a
+  source string via `evaluate(source, transpiler)` — proven headless in Node.
+  `check.js`/`watch.js` now use it; the watcher validates **in-process** (the
+  string-based path has no module cache to defeat, so the old subprocess-per-save
+  is gone). Added dep: `@strudel/transpiler`.
 - **P2 — web player**: Vite + `@strudel/web`, hardcoded pattern → audio via
   `scheduler.setPattern`, hot-swap.
 - **P3 — socket wire**: edit `live.js` → validate → push → hear it.
@@ -102,8 +105,9 @@ exist in Node).
 
 ## Open questions / risks (verified as gates, not assumed)
 
-- Does `evaluate()` run headless in Node? Fallback: transpile + `new Function`
-  with globals injected (still one shared code path, minus audio). *(P1)*
+- ~~Does `evaluate()` run headless in Node?~~ *(P1 — yes; `evaluate(source,
+  transpiler)` builds the pattern with no audio. `m` from `@strudel/mini` must be
+  a global, since the transpiler rewrites `"…"` into `m(...)`.)*
 - Exact scheduler / hot-swap API from `@strudel/web`. *(P2)*
 - Whether `initStrudel()` prebakes default `bd/sd/hh` or we ship a default
   setup. *(P2/P4)*

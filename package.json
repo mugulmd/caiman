@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@strudel/core": "1.2.6",
-    "@strudel/mini": "1.2.6"
+    "@strudel/mini": "1.2.6",
+    "@strudel/transpiler": "1.2.6"
   },
   "patchedDependencies": {
     "@kabelsalat/web@0.4.1": "patches/@kabelsalat%2Fweb@0.4.1.patch"

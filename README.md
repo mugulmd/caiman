@@ -54,13 +54,11 @@ Three pieces, each deliberately simple:
   `(...args: any[]) => Pattern` so chains complete — the types are **not** meant
   to be accurate. Regenerate after upgrading Strudel: `bun run gen-types`.
 
-- **`framework/scripts/check.js` + `watch.js`** — the correctness check. It
-  injects the Strudel globals, then imports your file. Because Strudel parses
-  mini-notation eagerly, loading the file surfaces **both** JS errors and
-  mini-notation errors — with no browser, audio, or transpiler. The watcher runs
-  each check in a fresh subprocess (~40ms) because a long-lived process caches
-  module source by path. (P1 will move this to a shared `evaluate(source)` path
-  inside the server.)
+- **`framework/server/validate.js`** — the correctness check, built on Strudel's
+  `evaluate(source, transpiler)` — the *same* evaluation the browser uses to play
+  code, so check and run can't drift. Evaluating the source surfaces JS syntax,
+  mini-notation, and reference errors with no browser or audio. `check.js`
+  (one-shot) and `watch.js` (in-process, re-checks on save) are thin CLIs over it.
 
 - **`.zed/settings.json`** — disables TS auto-import completions, so each Strudel
   name shows up once (the documented global) instead of also offering an
