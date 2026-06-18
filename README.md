@@ -38,6 +38,9 @@ re-registers it live while a session runs, so you can design a sound and hear it
 update. (A custom synth must stop its own nodes — `value.duration` is the note
 length — or voices pile up forever.)
 
+The **built-in** sounds Strudel loads by default (drum machines, VCSL
+instruments, piano, …) are cataloged in [`sounds/builtins.md`](sounds/builtins.md).
+
 ## How to write patterns
 
 Just write Strudel — no imports. Every function (`note`, `s`, `n`, `stack`, …)
