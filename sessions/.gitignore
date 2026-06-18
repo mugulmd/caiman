@@ -1,0 +1,6 @@
+# Ignore sessions:
+# if something is worth remembering,
+# it should be stored in cookbook/
+*
+!.gitignore
+!_template/

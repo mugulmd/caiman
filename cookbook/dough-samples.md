@@ -1,16 +1,15 @@
-# Built-in sounds
+# dough samples
 
-The sounds caiman loads by default (Strudel's [dough-samples](https://github.com/felixroos/dough-samples) set). Drums play with
-`s("bd sd hh")`; pitched instruments with `note("c e g").s("piano")`. Most names
-have several samples — pick one with `s("bd:3")`. To browse everything live, open
-the **sounds** tab in the Strudel REPL.
+The sounds caiman loads by default (Strudel's [dough-samples](https://github.com/felixroos/dough-samples) set).
+Drums play with `s("bd sd hh")`; pitched instruments with `note("c e g").s("piano")`.
+Most names have several samples — pick one with `s("bd:3")`.
 
 Totals: 71 drum machines · 128 VCSL instruments/perc · piano · 13 mridangam strokes · 9 Dirt one-shots.
 
 ## Drums
 
-Bare slot names play a default kit: `s("bd sd hh oh cp")`. Switch the drum machine
-with `.bank(...)`: `s("bd sd hh").bank("RolandTR909")`.
+Bare slot names play a default kit: `s("bd sd hh oh cp")`.
+Switch the drum machine with `.bank(...)`: `s("bd sd hh").bank("RolandTR909")`.
 
 **Slots** (standard abbreviations):
 
@@ -19,12 +18,13 @@ with `.bank(...)`: `s("bd sd hh").bank("RolandTR909")`.
 - `lt` `mt` `ht` low / mid / high tom · `cb` cowbell
 - `rd` ride · `cr` crash · `perc` percussion · `misc` `fx` extras
 
-**Banks** — any of these 71 machines goes in `.bank("…")`. Classics:
+**Banks** — any of these 71 machines goes in `.bank("…")`.
+
+Classics:
 `RolandTR808` `RolandTR909` `RolandTR707` `RolandTR606` `LinnDrum` `AkaiMPC60`
 `OberheimDMX` `EmuSP12` `KorgMinipops` `YamahaRX5` `CasioRZ1`.
 
-<details><summary>all 71</summary>
-
+All:
 AJKPercusyn, AkaiLinn, AkaiMPC60, AkaiXR10, AlesisHR16, AlesisSR16, BossDR110,
 BossDR220, BossDR55, BossDR550, CasioRZ1, CasioSK1, CasioVL1, DoepferMS404,
 EmuDrumulator, EmuModular, EmuSP12, KorgDDM110, KorgKPR77, KorgKR55, KorgKRZ,
@@ -37,8 +37,6 @@ RolandTR626, RolandTR707, RolandTR727, RolandTR808, RolandTR909, SakataDPM48,
 SequentialCircuitsDrumtracks, SequentialCircuitsTom, SergeModular, SimmonsSDS400,
 SimmonsSDS5, SoundmastersR88, UnivoxMicroRhythmer12, ViscoSpaceDrum, XdrumLM8953,
 YamahaRM50, YamahaRX21, YamahaRX5, YamahaRY30, YamahaTG33
-
-</details>
 
 ## Pitched instruments (VCSL + piano)
 
@@ -63,6 +61,5 @@ Many have articulation variants in the name (e.g. `xylophone_hard_ff`, `vibrapho
 
 ## One-shots & fun (Dirt-Samples)
 
-`casio` (toy keyboard tones), `crow` (caw), `insect`, `wind`, `jazz`, `metal`,
-`east` (eastern hits), `space`, `numbers` (spoken 0–9). Each has several
-variations — `s("numbers:3")`.
+`casio` (toy keyboard tones), `crow` (caw), `insect`, `wind`, `jazz`, `metal`, `east` (eastern hits), `space`, `numbers` (spoken 0–9).
+Each has several variations — `s("numbers:3")`.
