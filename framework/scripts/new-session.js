@@ -2,7 +2,7 @@
 //
 //   bun run new <name>
 //
-// Produces sessions/<name>/ with live.js, setup.js, session.json. Refuses to
+// Produces sessions/<name>/ with live.js and session.json. Refuses to
 // overwrite an existing session.
 
 import { cpSync, existsSync } from "node:fs";
