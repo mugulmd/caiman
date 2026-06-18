@@ -19,7 +19,7 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const name = process.argv[2] ?? 'sandbox';
 const sessionDir = join(repoRoot, 'sessions', name);
 const livePath = join(sessionDir, 'live.js');
-const setupPath = join(sessionDir, 'setup.js');
+const libraryDir = join(repoRoot, 'library');
 
 const C = {
   red: '\x1b[31m', green: '\x1b[32m', cyan: '\x1b[36m', dim: '\x1b[2m', reset: '\x1b[0m',
@@ -41,8 +41,37 @@ if (!existsSync(livePath)) {
 const read = (p) => (existsSync(p) ? readFileSync(p, 'utf8') : '');
 const stamp = () => new Date().toLocaleTimeString();
 
+// The shared sound library: every library/**/*.js file, registered in every
+// session. Returns the files that pass a syntax check; logs (and optionally
+// emits) errors for the rest so one broken synth doesn't sink the others.
+function refreshLibrary({ emit = false } = {}) {
+  const files = existsSync(libraryDir)
+    ? readdirSync(libraryDir, { recursive: true })
+        .filter((f) => typeof f === 'string' && f.endsWith('.js'))
+        .sort()
+        .map((f) => ({ file: f, source: read(join(libraryDir, f)) }))
+    : [];
+  const valid = [];
+  for (const item of files) {
+    const r = validateSetup(item.source);
+    if (r.ok) {
+      valid.push(item);
+    } else {
+      console.log(`${C.red}✗${C.reset} ${C.dim}${stamp()}${C.reset} library/${item.file} ${r.error.message}`);
+      if (emit) {
+        io.emit('validation-error', {
+          phase: `library/${item.file}`,
+          message: r.error.message,
+          loc: r.error.loc,
+        });
+      }
+    }
+  }
+  return valid;
+}
+
 // The current snapshot sent to clients on (re)connect.
-const session = { name, setup: read(setupPath), code: read(livePath) };
+const session = { name, library: [], code: read(livePath) };
 
 // --- Vite (serves the player) + socket.io (pushes code), one HTTP server -----
 const vite = await createViteServer({ root: join(repoRoot, 'framework', 'web') });
@@ -78,28 +107,27 @@ async function onLiveChange() {
   }
 }
 
-function onSetupChange() {
-  const source = read(setupPath);
-  const result = validateSetup(source);
-  if (result.ok) {
-    session.setup = source;
-    io.emit('setup', { source, ts: Date.now() });
-    console.log(`${C.green}✓${C.reset} ${C.dim}${stamp()}${C.reset} setup.js → pushed`);
-  } else {
-    console.log(`${C.red}✗${C.reset} ${C.dim}${stamp()}${C.reset} setup.js ${result.error.message}`);
-    io.emit('validation-error', { phase: 'setup', message: result.error.message, loc: result.error.loc });
-  }
+function onLibraryChange() {
+  session.library = refreshLibrary({ emit: true });
+  io.emit('library', { files: session.library, ts: Date.now() });
+  console.log(`${C.green}✓${C.reset} ${C.dim}${stamp()}${C.reset} library → pushed (${session.library.length} files)`);
 }
 
+// Watch the session's live.js and the whole shared library/ tree.
+chokidar.watch(livePath, { ignoreInitial: true }).on('change', onLiveChange);
 chokidar
-  .watch([livePath, setupPath], { ignoreInitial: true })
-  .on('change', (p) => (resolve(p) === setupPath ? onSetupChange() : onLiveChange()));
+  .watch(libraryDir, { ignoreInitial: true })
+  .on('all', (event) => {
+    if (event === 'change' || event === 'add' || event === 'unlink') onLibraryChange();
+  });
 
 // --- startup banner ----------------------------------------------------------
+session.library = refreshLibrary();
 const initial = await validate(session.code);
 console.log(`\n${C.cyan}caiman${C.reset} · session ${C.cyan}${name}${C.reset}`);
 console.log(`  player:  ${C.cyan}http://localhost:${port}${C.reset}`);
 console.log(`  editing: sessions/${name}/live.js`);
+console.log(`  library: ${session.library.length} files`);
 console.log(
   initial.ok
     ? `  ${C.green}✓ live.js ok${C.reset}\n`

@@ -11,21 +11,22 @@ music project is a lightweight **session**.
    Zed ── save ──▶ sessions/<name>/live.js
                           │
 ┌──────────── caiman server (bun, ONE process) ─────────────────────────────┐
-│  chokidar watches sessions/<name>/{live,setup}.js                          │
+│  chokidar watches sessions/<name>/live.js  +  library/**/*.js              │
 │      │ read source string                                                  │
 │      ▼                                                                      │
 │  validate(source) in Node ──fail──▶ log error to terminal, DON'T push      │
 │      │ ok                                  (browser keeps last-good audio) │
 │      ▼                                                                      │
-│  socket.io ──emit {code}/{setup}──▶ │   + serves the web app (same port)   │
-└─────────────────────────────────────┼──────────────────────────────────────┘
-                                       │ socket.io (auto-reconnect)
-                                       ▼
+│  socket.io ──emit {code}/{library}──▶ │   + serves the web app (same port) │
+└──────────────────────────────────────┼─────────────────────────────────────┘
+                                        │ socket.io (auto-reconnect)
+                                        ▼
 ┌──────────── browser web app (@strudel/web) ───────────────────────────────┐
-│  on connect:  receive {setup, code} → inject globals →                     │
-│               run setup once (load samples / register synths) → ready      │
-│  on {code}:   evaluate(code) → scheduler.setPattern(pattern)   // hot-swap  │
-│  on error:    emit {error} back → server prints it in your terminal        │
+│  on connect:  receive {library, code} → inject globals →                   │
+│               run library once (register all synths/samples) → ready       │
+│  on {code}:    evaluate(code) → scheduler.setPattern(pattern)  // hot-swap  │
+│  on {library}: re-run library → re-register synths/samples     // live      │
+│  on error:     emit {error} back → server prints it in your terminal       │
 │  [one click to unlock AudioContext]                                        │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -60,31 +61,47 @@ framework/                 # the engine — written once, shared by all sessions
     gen-types.js           # regenerate strudel.globals.d.ts from the registry
     new-session.js         # `bun run new <name>` → copies _template
     check.js / watch.js    # standalone one-shot / terminal checker (pre-server)
+library/                   # SHARED sounds — registered in EVERY session
+  *.js                     #   one file per synth / sample kit; your collection
 sessions/
   _template/               # the session template
     live.js                #   pattern — hot-swapped, fully validated
-    setup.js               #   samples()/registerSound() — browser-only, syntax-checked
     session.json           #   title + notes (tempo lives in code via setcps)
   <your projects…>/
 ```
 
-A single root `jsconfig.json` includes `sessions/**/*.js` and the framework
-`.d.ts`, so editing any session file gets the Strudel globals with no per-session
-config. Autocomplete/hover is purely static (editor-side) and independent of how
-code is validated or run.
+A single root `jsconfig.json` includes `sessions/**/*.js`, `library/**/*.js`,
+and the framework `.d.ts`, so editing any of them gets the Strudel globals
+(`note`/`s`/… and `samples`/`registerSound`/…) with no per-file config.
+Autocomplete/hover is purely static (editor-side) and independent of how code is
+validated or run.
+
+### Sound library
+
+`library/**/*.js` is a shared collection of synths and samples, registered in
+**every** session — you design a sound once and have it everywhere. Each file is
+plain side-effect JS using globals (`registerSound(...)`, `samples(...)`,
+`getAudioContext()`, …) — no imports, not transpiled (its strings are URLs /
+sample names, not mini-notation). The server syntax-checks each file, sends them
+in the connect snapshot, and watches the tree; editing a file re-registers its
+sounds **live** (superdough looks sounds up at trigger time, so the next note
+uses the new definition — no restart). A file that fails the syntax check is
+skipped and reported; the others still load. There is no per-session setup —
+the library is the single place for all sounds.
 
 ## Socket protocol
 
 | direction | event | payload | when |
 |---|---|---|---|
-| server → browser | `session` | `{ name, setup, code }` | on (re)connect — full snapshot |
+| server → browser | `session` | `{ name, library, code }` | on (re)connect — full snapshot |
 | server → browser | `code` | `{ source, ts }` | live.js changed and passed validation |
-| server → browser | `setup` | `{ source, ts }` | setup.js changed |
+| server → browser | `library` | `{ files: [{file, source}], ts }` | a library file changed/added/removed |
+| server → browser | `validation-error` | `{ phase, message, loc }` | a check failed (shown in the player's banner) |
 | browser → server | `runtime-error` | `{ phase, message }` | error that only surfaces in the browser |
 
-Validation split: `live.js` gets a full `evaluate()`; `setup.js` is
-syntax/transpile-checked only (it touches the Web Audio context, which doesn't
-exist in Node).
+Validation split: `live.js` gets a full `evaluate()`; library files are
+syntax-checked only (they touch the Web Audio context, which doesn't exist in
+Node — they're parsed via `new AsyncFunction(src)`, not run).
 
 ## Build milestones
 
@@ -108,8 +125,7 @@ exist in Node).
   + socket.io on one port, watches the session (chokidar), validates on change,
   and pushes valid `code` (rejects invalid, logging it — last good keeps
   playing). The player (`main.js`) is now socket-driven: snapshot on connect,
-  hot-swap on `code`, run `setup` on `setup`, and reports browser runtime errors
-  back to the terminal.
+  hot-swap on `code`, and reports browser runtime errors back to the terminal.
 
   Two websocket gotchas, both fixed:
   - **socket.io is websocket-only** (`transports: ['websocket']`). HTTP
@@ -126,23 +142,27 @@ exist in Node).
   reconnect resumes without restarting from cycle 0. Verified headlessly: HMR ws
   accepts connections on 24679; socket.io snapshot/valid-push/invalid-reject/
   restore all pass on 4321.
-- **P4 — setup.js** *(built; awaiting audio confirmation)*: the connect snapshot
-  carries `setup`; the browser runs it once (plain JS via `AsyncFunction`, no
-  transpile — its strings are URLs/sample names) to register samples/synths,
-  then plays `code`. `gen-types` now also emits `@strudel/webaudio`'s functions
-  (`samples`, `registerSound`, `getAudioContext`, … typed `=> any`) as globals,
-  so they autocomplete in `setup.js`. The `demo` session shows a custom synth
-  (`s("mysaw")`). Verified headlessly: types resolve under `lib esnext`, demo
-  live/setup validate, and the server transmits setup+code in the snapshot.
+- **P4 — custom sounds**: the browser runs registration code (plain JS via
+  `AsyncFunction`, no transpile — strings are URLs/sample names) to register
+  samples/synths, then plays `code`. `gen-types` also emits `@strudel/webaudio`'s
+  functions (`samples`, `registerSound`, `getAudioContext`, … typed `=> any`) as
+  globals so they autocomplete. *(Originally per-session `setup.js`; superseded
+  by the shared library in P6.)*
 - **P5 — polish** *(built; awaiting visual confirmation)*: the player now has a
   start-audio overlay (captures the gesture browsers require), a connection dot
   (live / offline / connecting), an error banner, and a pause/resume toggle
   (via `repl.toggle()` + `onToggle`). The server emits `validation-error` on a
-  failed check/setup so the browser shows *why* a save didn't take effect (the
+  failed check so the browser shows *why* a save didn't take effect (the
   last-good pattern keeps playing); the banner clears on the next good push.
   Browser runtime errors still round-trip to the terminal. `bun run session`
   with an unknown name lists the available sessions. Verified headlessly:
   validation-error reaches the client, good edits still push, session listing.
+- **P6 — shared library**: custom sounds moved from per-session `setup.js` to a
+  shared `library/**/*.js` registered in every session (one file per synth/kit).
+  The server discovers, syntax-checks, snapshots, and watches the tree; editing a
+  file re-registers live. Per-session `setup.js` removed. `jsconfig` includes
+  `library/`. Verified headlessly: snapshot carries the library; a file edit
+  pushes a `library` event.
 
 ## Open questions / risks (verified as gates, not assumed)
 
@@ -153,11 +173,10 @@ exist in Node).
   transpiler })` → `repl.evaluate(code)` transpiles, evaluates, and
   `setPattern`s in one call.)*
 - ~~Default `bd/sd/hh`?~~ *(P2 — not built in; we prebake
-  `samples('github:tidalcycles/dirt-samples')`. Per-session `setup.js` can add
-  more in P4.)*
+  `samples('github:tidalcycles/dirt-samples')`. The shared `library/` adds more.)*
 - ~~Multiple core copies in the browser bundle?~~ *(P2 — webaudio pins
   core@1.2.5 while we use 1.2.6; a bun `overrides` forces one version. Vite
   `resolve.dedupe` is a second guard.)*
 - ~~Vite + socket.io on one port?~~ *(P3 — yes: socket.io attaches to Vite's
-  own `httpServer` on path `/caiman.io`; Vite HMR is disabled so there's no
-  websocket-upgrade conflict.)*
+  own `httpServer` on path `/caiman.io`; Vite HMR runs on its own port (24679),
+  so there's no websocket-upgrade conflict.)*

@@ -50,10 +50,10 @@ let strudelRepl;
 let socket;
 let started = false; // true after the user clicks ▶ start (unlocks audio)
 let isPlaying = false; // scheduler running? kept in sync by repl's onToggle
-const pending = { setup: null, code: null };
+const pending = { library: [], code: null };
 // What's currently live, so we never re-evaluate identical source (keeps
-// reconnects from restarting playback from cycle 0).
-const playing = { setup: null, code: null };
+// reconnects from restarting playback / re-registering for nothing).
+const playing = { library: null, code: null };
 
 async function boot() {
   await evalScope(import('@strudel/core'), import('@strudel/mini'), import('@strudel/webaudio'));
@@ -86,10 +86,10 @@ function connect() {
   socket.on('disconnect', () => setConn('offline'));
 
   // Full snapshot on (re)connect.
-  socket.on('session', ({ name, setup, code }) => {
+  socket.on('session', ({ name, library, code }) => {
     els.session.textContent = `caiman · ${name}`;
     document.title = `caiman — ${name}`;
-    pending.setup = setup;
+    pending.library = library ?? [];
     pending.code = code;
     els.code.textContent = code ?? '';
     if (started) applyAll();
@@ -101,24 +101,29 @@ function connect() {
     clearBanner();
     if (started) play(source);
   });
-  // setup.js changed → re-run registration.
-  socket.on('setup', ({ source }) => {
-    pending.setup = source;
+  // a library/**/*.js file changed → re-register synths/samples live.
+  socket.on('library', ({ files }) => {
+    pending.library = files ?? [];
     clearBanner();
-    if (started) runSetup(source);
+    if (started) runLibrary(pending.library);
   });
   // Server-side validation failed → show why; the last-good pattern keeps playing.
   socket.on('validation-error', ({ phase, message, loc }) => showBanner(phase, message, loc));
 }
 
-async function runSetup(source) {
-  if (!source?.trim() || source === playing.setup) return;
-  try {
-    await new AsyncFunction(source)();
-    playing.setup = source;
-  } catch (err) {
-    reportRuntime('setup', err);
+async function runLibrary(files) {
+  if (!files?.length) return;
+  const key = JSON.stringify(files);
+  if (key === playing.library) return; // identical → already registered
+  for (const { file, source } of files) {
+    if (!source?.trim()) continue;
+    try {
+      await new AsyncFunction(source)();
+    } catch (err) {
+      reportRuntime(`library/${file}`, err);
+    }
   }
+  playing.library = key;
 }
 
 async function play(code) {
@@ -133,7 +138,7 @@ async function play(code) {
 }
 
 async function applyAll() {
-  await runSetup(pending.setup);
+  await runLibrary(pending.library);
   await play(pending.code);
 }
 

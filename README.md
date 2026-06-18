@@ -9,7 +9,7 @@ once; each music project is a thin folder under `sessions/`. A Node server
 watches your file, validates each save, and pushes valid code to a browser tab
 that plays it — hot-swapping the pattern live. See
 [`framework/ARCHITECTURE.md`](framework/ARCHITECTURE.md) for the design and the
-build phases (samples/synths and polish are still in progress).
+build phases.
 
 ## Quick start
 
@@ -27,6 +27,16 @@ hot-swapped into the running audio; an invalid edit is logged in the terminal an
 Validation-only, no audio: `bun run check sessions/<name>/live.js` (one-shot) or
 `bun run watch sessions/<name>/live.js` (re-check on save). Both default to
 `sessions/sandbox/live.js`.
+
+## Custom sounds (shared library)
+
+Drop a file in `library/` to register a synth or sample kit — it's available in
+**every** session via `s("name")`. Each file is plain JS using globals
+(`registerSound(...)`, `samples(...)`, `getAudioContext()`); see
+[`library/mysaw.js`](library/mysaw.js) for a worked synth. Editing a library file
+re-registers it live while a session runs, so you can design a sound and hear it
+update. (A custom synth must stop its own nodes — `value.duration` is the note
+length — or voices pile up forever.)
 
 ## How to write patterns
 

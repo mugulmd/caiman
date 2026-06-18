@@ -13,5 +13,5 @@
     "allowJs": true,
     "noEmit": true
   },
-  "include": ["framework/**/*.js", "framework/**/*.d.ts", "sessions/**/*.js"]
+  "include": ["framework/**/*.js", "framework/**/*.d.ts", "sessions/**/*.js", "library/**/*.js"]
 }

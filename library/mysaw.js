@@ -1,16 +1,16 @@
-// Session setup — runs once in the browser on connect.
+// Shared sound library — every file here is registered in EVERY session.
+// Add a file per synth or sample kit; this folder is your growing collection.
 //
-// Demonstrates a custom synth. It only produces the raw tone; gain, filters,
-// reverb, etc. from the pattern (.lpf(), .room(), …) are applied for you by the
-// engine. samples()/registerSound()/getAudioContext() are globals here.
+// These run in the browser as plain side-effect JS (no imports, no transpile):
+// registerSound / samples / getAudioContext / getFrequencyFromValue are globals.
+// Edit and save while a session is running to hear changes live.
 
 // A detuned sawtooth, playable as s("mysaw").
 registerSound(
   'mysaw',
   (time, value, onended) => {
     const ctx = getAudioContext();
-    // Derive Hz from the value — works whether the pattern used note(...) or
-    // freq(...). (Reading value.freq directly is undefined for note(...).)
+    // Hz from the value — works whether the pattern used note(...) or freq(...).
     const frequency = getFrequencyFromValue(value);
     const duration = value.duration ?? 0.25;
 
@@ -32,8 +32,7 @@ registerSound(
     o1.start(time);
     o2.start(time);
 
-    // CRUCIAL: schedule the voice to end. Without a stop, every triggered
-    // oscillator runs forever — they pile up and ignore pause.
+    // CRUCIAL: schedule the voice to end, or oscillators pile up forever.
     const end = holdEnd + release + 0.01;
     o1.stop(end);
     o2.stop(end);
@@ -60,8 +59,3 @@ registerSound(
   },
   { type: 'synth' },
 );
-
-// Custom samples example (needs your own files — `npx @strudel/sampler` serves a
-// folder). Uncomment and point at your kit:
-//
-//   await samples({ clap: 'clap.wav', rim: 'rim.wav' }, 'http://localhost:5432/');
