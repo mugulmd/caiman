@@ -24,9 +24,9 @@ then edit `sessions/my-track/live.js` in your editor. Every save is validated an
 hot-swapped into the running audio; an invalid edit is logged in the terminal and
 **not** pushed, so the last good pattern keeps playing.
 
-Validation-only, no audio: `bun run check sessions/<name>/live.js` (one-shot) or
-`bun run watch sessions/<name>/live.js` (re-check on save). Both default to
-`sessions/sandbox/live.js`.
+Validation-only, no audio: `bun run check sessions/<name>/live.js` (one-shot;
+defaults to `sessions/sandbox/live.js`). Handy for a quick manual check; during a
+session the server already validates on every save.
 
 ## Custom sounds (shared library)
 
@@ -77,8 +77,9 @@ Three pieces, each deliberately simple:
 - **`framework/server/validate.js`** — the correctness check, built on Strudel's
   `evaluate(source, transpiler)` — the *same* evaluation the browser uses to play
   code, so check and run can't drift. Evaluating the source surfaces JS syntax,
-  mini-notation, and reference errors with no browser or audio. `check.js`
-  (one-shot) and `watch.js` (in-process, re-checks on save) are thin CLIs over it.
+  mini-notation, and reference errors with no browser or audio. `check.js` is a
+  thin one-shot CLI over it; the session server uses the same `validate()` on
+  every save.
 
 - **`.zed/settings.json`** — disables TS auto-import completions, so each Strudel
   name shows up once (the documented global) instead of also offering an

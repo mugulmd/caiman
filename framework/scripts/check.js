@@ -14,8 +14,8 @@ const GREEN = '\x1b[32m';
 const DIM = '\x1b[2m';
 const RESET = '\x1b[0m';
 
-// Print a ✓/✗ line for a validation result. Shared with watch.js.
-export function report(target, result) {
+// Print a ✓/✗ line for a validation result.
+function report(target, result) {
   const rel = basename(target);
   if (result.ok) {
     console.log(`${GREEN}✓${RESET} ${rel} ${DIM}— ok${RESET}`);

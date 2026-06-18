@@ -60,7 +60,7 @@ framework/                 # the engine — written once, shared by all sessions
   scripts/
     gen-types.js           # regenerate strudel.globals.d.ts from the registry
     new-session.js         # `bun run new <name>` → copies _template
-    check.js / watch.js    # standalone one-shot / terminal checker (pre-server)
+    check.js               # standalone one-shot validate (handy for quick checks)
 library/                   # SHARED sounds — registered in EVERY session
   *.js                     #   one file per synth / sample kit; your collection
 sessions/
@@ -109,9 +109,9 @@ Node — they're parsed via `new AsyncFunction(src)`, not run).
   `new-session`. Gate: autocomplete + one-shot check still work.
 - **P1 — server evaluate()** *(done)*: `framework/server/validate.js` validates a
   source string via `evaluate(source, transpiler)` — proven headless in Node.
-  `check.js`/`watch.js` now use it; the watcher validates **in-process** (the
-  string-based path has no module cache to defeat, so the old subprocess-per-save
-  is gone). Added dep: `@strudel/transpiler`.
+  `check.js` and the session server both use it, validating **in-process** (the
+  string-based path has no module cache to defeat, so no subprocess is needed).
+  Added dep: `@strudel/transpiler`.
 - **P2 — web player** *(built; awaiting audio confirmation)*: `framework/web/`
   (Vite). Uses the individual packages (not the `@strudel/web` bundle) so the
   browser shares the same core version line as the Node validator. Hot-swap =

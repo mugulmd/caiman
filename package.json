@@ -5,7 +5,6 @@
   "private": true,
   "scripts": {
     "check": "bun framework/scripts/check.js",
-    "watch": "bun framework/scripts/watch.js",
     "gen-types": "bun framework/scripts/gen-types.js",
     "new": "bun framework/scripts/new-session.js",
     "session": "bun framework/server/index.js"
