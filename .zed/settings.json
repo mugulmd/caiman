@@ -9,5 +9,10 @@
         "typescript": { "suggest": { "autoImports": false } }
       }
     }
+  },
+  // Don't reformat JS on save — pattern files (live.js, library/, cookbook/) are
+  // laid out by hand for live coding; the formatter would collapse short lines.
+  "languages": {
+    "JavaScript": { "format_on_save": "off" }
   }
 }
