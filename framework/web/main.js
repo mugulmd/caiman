@@ -85,6 +85,17 @@ async function boot() {
   });
   initAudioOnFirstClick();
 
+  // Transport functions (setcps/setcpm/hush) are created inside repl(), not
+  // exported as modules — so evalScope never injected them. Expose them as
+  // globals here so pattern code can call them. (setcpm = cycles/min → cps/60.)
+  Object.assign(globalThis, {
+    setcps: (cps) => strudelRepl.setCps(cps),
+    setCps: (cps) => strudelRepl.setCps(cps),
+    setcpm: (cpm) => strudelRepl.setCps(cpm / 60),
+    setCpm: (cpm) => strudelRepl.setCps(cpm / 60),
+    hush: () => strudelRepl.stop(),
+  });
+
   connect();
   els.start.disabled = false;
   els.start.textContent = '▶ start';

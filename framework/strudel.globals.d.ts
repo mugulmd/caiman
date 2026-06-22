@@ -9308,3 +9308,18 @@ declare function webAudioTimeout(...args: any[]): any;
 declare function webaudioOutput(...args: any[]): any;
 
 declare function webaudioRepl(...args: any[]): any;
+
+// ---- Transport (tempo / stop) — provided by the caiman player --------------
+
+/** Set tempo in cycles per second (default 0.5 = 120 bpm in 4/4). */
+declare function setcps(cps: number): void;
+
+/** Set tempo in cycles per minute. setcpm(140/4) = 140 bpm in 4/4. */
+declare function setcpm(cpm: number): void;
+
+declare const setCps: typeof setcps;
+
+declare const setCpm: typeof setcpm;
+
+/** Stop all playback. */
+declare function hush(): void;

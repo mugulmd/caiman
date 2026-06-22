@@ -28,6 +28,14 @@ async function load() {
         // skip names that collide with read-only globals
       }
     }
+    // Transport functions live on the browser's repl, not as module exports.
+    // Stub them as no-ops so live.js that calls setcps/setcpm/hush validates —
+    // they're runtime side-effects (there's no scheduler here), irrelevant to
+    // whether the pattern itself is correct.
+    const noop = () => {};
+    Object.assign(globalThis, {
+      setcps: noop, setCps: noop, setcpm: noop, setCpm: noop, hush: noop,
+    });
     return { evaluate: strudel.evaluate, transpiler };
   } finally {
     [console.log, console.warn, console.error] = saved;
